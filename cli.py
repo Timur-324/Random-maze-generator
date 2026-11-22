@@ -226,7 +226,7 @@ def _verdict(results) -> str:
 
 
 def open_gui(args, info) -> int:
-    """Открыть окно с тем же состоянием (импорт tkinter только здесь)."""
+    """Открыть окно с тем же состоянием (импорт PyQt6 только здесь)."""
     try:
         import gui
     except ImportError as exc:  # pragma: no cover - зависит от окружения
