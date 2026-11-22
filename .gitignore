@@ -30,3 +30,6 @@ Thumbs.db
 .scratch/
 *.png
 *.svg
+
+# ...но скриншоты интерфейса лежат в репозитории
+!docs/screenshots/*.png

@@ -13,7 +13,7 @@
 предусмотрен флаг ``--no-time``: он убирает из вывода строки со временем
 (тест ``test_cli`` сверяет именно такой вывод).
 
-Модуль не импортирует tkinter, пока не попросят ``--gui``.
+Модуль не импортирует PyQt6, пока не попросят ``--gui``.
 """
 
 from __future__ import annotations
@@ -230,7 +230,9 @@ def open_gui(args, info) -> int:
     try:
         import gui
     except ImportError as exc:  # pragma: no cover - зависит от окружения
-        print(f"Не удалось загрузить GUI: {exc}", file=sys.stderr)
+        print(f"Не удалось загрузить GUI: {exc}\n"
+              f"Для окна нужен PyQt6: pip install -r requirements.txt",
+              file=sys.stderr)
         return 4
     return gui.main(
         size=info.size,
