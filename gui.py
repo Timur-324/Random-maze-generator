@@ -542,6 +542,14 @@ class MazeApp(tk.Tk):
             result = self.results[task["algo"]]
             view = task["view"]
             if result.found:
+                if self.info is not None and self.info.mode == 2:
+                    # режим 2: подсветить все клетки, лежащие на каком-нибудь
+                    # кратчайшем маршруте, — видно, что маршрутов больше одного
+                    for cell in solvers.shortest_path_cells(
+                        self.maze, self.maze.start, self.maze.end
+                    ):
+                        if cell not in (self.maze.start, self.maze.end):
+                            view.paint(cell, COLORS["alternative"])
                 for cell in result.path:
                     view.paint(cell, COLORS["path"])
                 view.caption.set(

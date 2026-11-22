@@ -145,6 +145,29 @@ class TestSearchPipeline(unittest.TestCase):
         self.assertIn("выхода нет", app.status.get())
         self.assertIsNone(app._current_path)
 
+    def test_mode2_highlights_alternatives(self):
+        """В режиме 2 подсвечиваются клетки альтернативных кратчайших маршрутов."""
+        maze, info = modes.build(size=20, seed=2, mode=2, cycle_density=0.15)
+        result = metrics.measure(maze, info.start, info.end, "bfs",
+                                 repeats=1, record=True)
+        view = FakeView()
+        app = make_app([view], {"bfs": result}, stage="search")
+        app.maze = maze
+        app.info = info
+        app._tasks = [{
+            "stream": iter(result.events),
+            "handle": lambda event, v=view: app._handle_search(event, v),
+            "done": False,
+            "algo": "bfs",
+            "view": view,
+        }]
+        drain(app)
+        alternatives = [c for c, color in view.colors.items()
+                        if color == gui.COLORS["alternative"]]
+        self.assertTrue(alternatives, "должны подсветиться альтернативные клетки")
+        for cell in result.path:
+            self.assertEqual(view.colors[cell], gui.COLORS["path"])
+
     def test_pause_freezes_progress(self):
         maze, info = modes.build(size=20, seed=3, mode=1)
         result = metrics.measure(maze, info.start, info.end, "bfs",
