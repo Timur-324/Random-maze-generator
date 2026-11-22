@@ -21,7 +21,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from maze import generators, metrics, modes, solvers
+from maze import generators, hunt, metrics, modes, solvers
 from maze.grid import Maze
 
 SIZES = (10, 20, 50, 100)
@@ -94,6 +94,20 @@ def build_parser() -> argparse.ArgumentParser:
     bench.add_argument("--trap", choices=("a", "b"), default="a",
                        help="подрежим ловушки для режима 3")
     bench.add_argument("--repeats", type=int, default=metrics.DEFAULT_REPEATS)
+
+    hunter = sub.add_parser(
+        "hunt",
+        help="искать лабиринт, максимально трудный для A* (генетический поиск)",
+    )
+    hunter.add_argument("--size", type=int, default=20, choices=SIZES)
+    hunter.add_argument("--seed", type=int, default=0)
+    hunter.add_argument("--algo", choices=("astar", "bfs"), default="astar")
+    hunter.add_argument("--population", type=int, default=16)
+    hunter.add_argument("--generations", type=int, default=20)
+    hunter.add_argument("--start", type=str, default=None)
+    hunter.add_argument("--end", type=str, default=None)
+    hunter.add_argument("--ascii", dest="ascii", action="store_true",
+                        default=False, help="напечатать найденный лабиринт")
     return parser
 
 
@@ -265,6 +279,39 @@ def cmd_bench(args) -> int:
     return 0
 
 
+def cmd_hunt(args) -> int:
+    try:
+        start = parse_cell(args.start, args.size) if args.start else None
+        end = parse_cell(args.end, args.size) if args.end else None
+        report = hunt.search_hardest(
+            size=args.size, seed=args.seed, algorithm=args.algo,
+            population=args.population, generations=args.generations,
+            start=start, end=end,
+        )
+    except ValueError as exc:
+        print(f"Ошибка: {exc}", file=sys.stderr)
+        return 2
+    print("Поиск лабиринта, самого трудного для "
+          f"{solvers.ALGORITHM_TITLES[report['algorithm']]}")
+    print(_row("размер", f"{report['size']}x{report['size']}"))
+    print(_row("seed", report["seed"]))
+    print(_row("старт/финиш", f"{report['start']} / {report['end']}"))
+    print(_row("популяция x поколений",
+               f"{report['population']} x {report['generations']}"))
+    print(_row("обычный лабиринт", f"{report['baseline_explored']} клеток"))
+    print(_row("лучший найденный", f"{report['best_explored']} клеток "
+                                   f"({report['best_share'] * 100:.1f}% сетки)"))
+    print(_row("путь в нём", f"{report['best_steps']} шагов"))
+    maxima = [row[1] for row in report["history"]]
+    print(_row("лучшее по поколениям", " ".join(str(x) for x in maxima)))
+    if args.ascii:
+        maze = report["maze"]
+        path = solvers.solve_bfs(maze, maze.start, maze.end).path
+        print()
+        print(maze.to_ascii(path))
+    return 0
+
+
 def main(argv=None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -275,6 +322,8 @@ def main(argv=None) -> int:
         return cmd_run(args)
     if args.command == "bench":
         return cmd_bench(args)
+    if args.command == "hunt":
+        return cmd_hunt(args)
     parser.print_help()
     return 0
 
