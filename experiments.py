@@ -18,7 +18,7 @@ import statistics
 import subprocess
 import sys
 
-from maze import generators, metrics, modes, solvers
+from maze import hunt, metrics, modes, solvers
 
 SIZES = (10, 20, 50, 100)
 SEEDS = (12345, 1, 2, 3, 4)
@@ -252,6 +252,25 @@ def section_cli(seed=12345) -> str:
     )
 
 
+def section_hunt(population=16, generations=20, seed=1) -> str:
+    rows = []
+    for size in (10, 20, 50):
+        report = hunt.search_hardest(size=size, seed=seed,
+                                     population=population,
+                                     generations=generations)
+        history = [row[1] for row in report["history"]]
+        rows.append([f"{size}×{size}", report["baseline_explored"],
+                     report["best_explored"],
+                     fmt(report["best_share"] * 100, 1),
+                     report["best_steps"],
+                     f"{history[0]} → {history[-1]}",
+                     population * (generations + 1)])
+    return md_table(
+        ["размер", "обычный лабиринт, explored", "лучший найденный, explored",
+         "% сетки", "путь, шагов", "лучшее по поколениям", "оценок A*"], rows
+    )
+
+
 SECTIONS = {
     "modes": ("BFS vs A* по режимам и размерам (среднее по seed'ам)", section_modes),
     "cycles": ("Плотность циклов (режим 2, 50×50)", section_cycles),
@@ -263,6 +282,8 @@ SECTIONS = {
     "heuristic": ("Точность эвристики: h умножается на коэффициент (50×50)",
                   section_heuristic),
     "cli": ("CLI: все размеры и генераторы, seed 12345", section_cli),
+    "hunt": ("Дополнительное усложнение №1: поиск трудного для A* лабиринта "
+             "(популяция 16, 20 поколений)", section_hunt),
 }
 
 

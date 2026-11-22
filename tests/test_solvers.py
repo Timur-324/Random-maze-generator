@@ -106,7 +106,7 @@ class TestAstar(unittest.TestCase):
 
 
 class TestBfsEqualsAstar(unittest.TestCase):
-    """BFS == A* по длине пути: сотни случайных лабиринтов всех режимов."""
+    """BFS == A* по длине пути: 200 случайных лабиринтов всех режимов."""
 
     def test_many_mazes_all_modes(self):
         checked = 0
@@ -114,7 +114,7 @@ class TestBfsEqualsAstar(unittest.TestCase):
         for index, (mode, trap) in enumerate(
             ((1, None), (2, None), (3, "a"), (3, "b"))
         ):
-            for seed in range(35):
+            for seed in range(50):
                 size = 8 + seed % 5
                 generator = generators_cycle[(seed + index) % 3]
                 with self.subTest(mode=mode, trap=trap, seed=seed, size=size):
@@ -135,7 +135,7 @@ class TestBfsEqualsAstar(unittest.TestCase):
                         self.assertEqual(bfs.steps, astar.steps)
                         check_path(self, maze, astar, start, end)
                     checked += 1
-        self.assertEqual(checked, 140)
+        self.assertEqual(checked, 200)
 
     def test_random_blocked_cells_keep_parity(self):
         """Даже с замурованными клетками BFS и A* согласованы."""
