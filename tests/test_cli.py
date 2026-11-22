@@ -116,6 +116,12 @@ class TestCliRun(unittest.TestCase):
         for label in ("1", "2", "3a", "3b"):
             self.assertIn(label, out)
 
+    def test_hunt(self):
+        out = run_cli("hunt", "--size", "10", "--seed", "3",
+                      "--population", "6", "--generations", "2")
+        self.assertIn("лучший найденный", out)
+        self.assertIn("клеток", out)
+
     def test_no_command_shows_help(self):
         out = run_cli()
         self.assertIn("usage", out.lower())
