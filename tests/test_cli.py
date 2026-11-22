@@ -1,5 +1,6 @@
 """Тесты CLI: запуск, вывод, детерминизм, ASCII, скорость."""
 
+import argparse
 import os
 import subprocess
 import sys
@@ -126,15 +127,23 @@ class TestCliRun(unittest.TestCase):
         out = run_cli()
         self.assertIn("usage", out.lower())
 
-    @unittest.skipIf(os.environ.get("DISPLAY"), "в окружении есть дисплей")
-    def test_gui_without_display_reports_error(self):
-        process = subprocess.run(
-            [sys.executable, "cli.py", "run", "--size", "10", "--seed", "1",
-             "--gui"],
-            cwd=ROOT, capture_output=True, text=True, timeout=60,
-        )
-        self.assertEqual(process.returncode, 1)
-        self.assertIn("GUI недоступен", process.stderr)
+    def test_open_gui_passes_state(self):
+        """--gui передаёт в окно ровно то состояние, что посчитал CLI."""
+        from unittest import mock
+
+        import cli
+        from maze import modes
+
+        _maze, info = modes.build(size=10, seed=7, mode=2, cycle_density=0.1)
+        args = argparse.Namespace(algo="both")
+        with mock.patch("gui.main", return_value=0) as fake:
+            self.assertEqual(cli.open_gui(args, info), 0)
+        kwargs = fake.call_args.kwargs
+        self.assertEqual(kwargs["size"], 10)
+        self.assertEqual(kwargs["seed"], 7)
+        self.assertEqual(kwargs["mode"], 2)
+        self.assertEqual(kwargs["algorithm"], "both")
+        self.assertTrue(kwargs["autostart"])
 
 
 if __name__ == "__main__":
